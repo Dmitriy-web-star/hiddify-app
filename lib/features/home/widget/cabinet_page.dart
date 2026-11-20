@@ -17,7 +17,7 @@ class _CabinetPageState extends ConsumerState<CabinetPage> {
   late final WebViewController _controller;
   bool _isLoading = true;
 
-  static const String _cabinetUrl = 'https://skydpi.online';
+  static const String _cabinetUrl = 'https://cabinet.skydpi.online';
 
   @override
   void initState() {
