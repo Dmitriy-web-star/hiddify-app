@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:hiddify/features/profile/notifier/profile_notifier.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-class CabinetPage extends ConsumerStatefulWidget {
+class CabinetPage extends StatefulWidget {
   const CabinetPage({super.key, required this.onSubscriptionImported});
 
   final VoidCallback onSubscriptionImported;
 
   @override
-  ConsumerState<CabinetPage> createState() => _CabinetPageState();
+  State<CabinetPage> createState() => _CabinetPageState();
 }
 
-class _CabinetPageState extends ConsumerState<CabinetPage> {
+class _CabinetPageState extends State<CabinetPage> {
   late final WebViewController _controller;
   bool _isLoading = true;
 
@@ -67,7 +65,6 @@ class _CabinetPageState extends ConsumerState<CabinetPage> {
     final uri = Uri.tryParse(rawUrl);
 
     if (uri != null) {
-      // Достаем ?url=... если ссылка вида hiddify://import/https://... или ?url=https://...
       if (uri.queryParameters.containsKey('url')) {
         subUrl = uri.queryParameters['url'];
       } else {
@@ -79,10 +76,13 @@ class _CabinetPageState extends ConsumerState<CabinetPage> {
     }
 
     if (subUrl != null && subUrl.startsWith('http')) {
-      await ref.read(addProfileProvider.notifier).add(subUrl);
+      // Передаем ссылку в сам клиент через встроенную схему hiddify://import/
+      final importUri = Uri.parse('hiddify://import/$subUrl');
+      await launchUrl(importUri, mode: LaunchMode.externalApplication);
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Подписка успешно добавлена! Нажмите кнопку подключения.')),
+          const SnackBar(content: Text('Подписка передана в клиент! Нажмите кнопку подключения.')),
         );
         widget.onSubscriptionImported();
       }
