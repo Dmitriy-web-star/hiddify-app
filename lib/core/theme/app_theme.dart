@@ -8,40 +8,50 @@ class AppTheme {
   final AppThemeMode mode;
   final String fontFamily;
 
-  ThemeData lightTheme(ColorScheme? lightColorScheme) {
-    final ColorScheme scheme = lightColorScheme ?? ColorScheme.fromSeed(seedColor: const Color(0xFF293CA0));
+  static const _bgDark = Color(0xFF0E0D15);
+  static const _cardDark = Color(0xFF181624);
+  static const _accentPurple = Color(0xFF7B61FF);
+
+  ThemeData _xPlatformDarkTheme() {
+    final baseScheme = ColorScheme.fromSeed(
+      seedColor: _accentPurple,
+      brightness: Brightness.dark,
+      surface: _bgDark,
+      primary: _accentPurple,
+    );
+
     return ThemeData(
       useMaterial3: true,
-      colorScheme: scheme,
+      brightness: Brightness.dark,
+      colorScheme: baseScheme,
+      scaffoldBackgroundColor: _bgDark,
       fontFamily: fontFamily,
+      appBarTheme: const AppBarTheme(
+        backgroundColor: _bgDark,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+      ),
+      cardTheme: CardThemeData(
+        color: _cardDark,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: _cardDark,
+        surfaceTintColor: Colors.transparent,
+        indicatorColor: _accentPurple.withValues(alpha: 0.22),
+      ),
       extensions: const <ThemeExtension<dynamic>>{ConnectionButtonTheme.light},
     );
   }
 
-  ThemeData darkTheme(ColorScheme? darkColorScheme) {
-    final ColorScheme scheme =
-        darkColorScheme ?? ColorScheme.fromSeed(seedColor: const Color(0xFF293CA0), brightness: Brightness.dark);
-    return ThemeData(
-      useMaterial3: true,
-      colorScheme: scheme,
-      scaffoldBackgroundColor: mode.trueBlack ? Colors.black : scheme.surface,
-      fontFamily: fontFamily,
-      extensions: const <ThemeExtension<dynamic>>{ConnectionButtonTheme.light},
-    );
-  }
+  ThemeData lightTheme(ColorScheme? lightColorScheme) => _xPlatformDarkTheme();
+
+  ThemeData darkTheme(ColorScheme? darkColorScheme) => _xPlatformDarkTheme();
 
   CupertinoThemeData cupertinoThemeData(bool sysDark, ColorScheme? lightColorScheme, ColorScheme? darkColorScheme) {
-    final bool isDark = switch (mode) {
-      AppThemeMode.system => sysDark,
-      AppThemeMode.light => false,
-      AppThemeMode.dark => true,
-      AppThemeMode.black => true,
-    };
-    final def = CupertinoThemeData(brightness: isDark ? Brightness.dark : Brightness.light);
-    // final def = CupertinoThemeData(brightness: Brightness.dark);
-
-    // return def;
-    final defaultMaterialTheme = isDark ? darkTheme(darkColorScheme) : lightTheme(lightColorScheme);
+    const def = CupertinoThemeData(brightness: Brightness.dark);
+    final defaultMaterialTheme = _xPlatformDarkTheme();
     return MaterialBasedCupertinoThemeData(
       materialTheme: defaultMaterialTheme.copyWith(
         cupertinoOverrideTheme: def.copyWith(
@@ -54,9 +64,9 @@ class AppTheme {
             pickerTextStyle: def.textTheme.pickerTextStyle.copyWith(fontFamily: fontFamily),
             dateTimePickerTextStyle: def.textTheme.dateTimePickerTextStyle.copyWith(fontFamily: fontFamily),
             tabLabelTextStyle: def.textTheme.tabLabelTextStyle.copyWith(fontFamily: fontFamily),
-          ).copyWith(),
-          barBackgroundColor: def.barBackgroundColor,
-          scaffoldBackgroundColor: def.scaffoldBackgroundColor,
+          ),
+          barBackgroundColor: _cardDark,
+          scaffoldBackgroundColor: _bgDark,
         ),
       ),
     );
