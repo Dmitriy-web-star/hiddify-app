@@ -16,10 +16,13 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          flutter-version: '3.47.9'
 
-      - name: Get dependencies
-        run: flutter pub get
+      - name: Prepare Hiddify Core & Codegen
+        run: |
+          flutter pub get
+          dart run build_runner build --delete-conflicting-outputs
+          make android-libs
 
       - name: Build Debug APK
         run: flutter build apk --debug
