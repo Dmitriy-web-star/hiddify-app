@@ -38,21 +38,52 @@ class _CabinetPageState extends ConsumerState<CabinetPage> {
           },
           onPageFinished: (_) {
             if (mounted) setState(() => _isLoading = false);
-            // Перехватываем клики по deep-link ссылкам, если сайт открывает их через JS
             _controller.runJavaScript('''
-              document.addEventListener('click', function(e) {
-                var a = e.target.closest('a');
-                if (a && a.href && (
-                  a.href.startsWith('xplatform://') ||
-                  a.href.startsWith('hiddify://') ||
-                  a.href.startsWith('happ://') ||
-                  a.href.startsWith('v2raytun://') ||
-                  a.href.startsWith('v2rayng://')
-                )) {
-                  e.preventDefault();
-                  XPlatformBridge.postMessage(a.href);
+              (function() {
+                if (window._xpHooked) return;
+                window._xpHooked = true;
+
+                function checkAndSend(url) {
+                  if (!url || typeof url !== 'string') return false;
+                  if (
+                    url.startsWith('xplatform://') ||
+                    url.startsWith('hiddify://') ||
+                    url.startsWith('happ://') ||
+                    url.startsWith('v2raytun://') ||
+                    url.startsWith('v2rayng://')
+                  ) {
+                    XPlatformBridge.postMessage(url);
+                    return true;
+                  }
+                  return false;
                 }
-              }, true);
+
+                // 1. Перехват window.open
+                const origOpen = window.open;
+                window.open = function(url) {
+                  if (checkAndSend(url)) return null;
+                  return origOpen.apply(this, arguments);
+                };
+
+                // 2. Перехват кликов по любым элементам и ссылкам
+                document.addEventListener('click', function(e) {
+                  var a = e.target.closest('a');
+                  if (a && checkAndSend(a.href)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return;
+                  }
+                }, true);
+
+                // 3. Перехват создания скрытых iframe (так openAppScheme.ts часто открывает deep-link)
+                const origAppend = Element.prototype.appendChild;
+                Element.prototype.appendChild = function(el) {
+                  if (el && el.tagName === 'IFRAME' && checkAndSend(el.src)) {
+                    return el;
+                  }
+                  return origAppend.apply(this, arguments);
+                };
+              })();
             ''');
           },
           onNavigationRequest: (NavigationRequest request) {
