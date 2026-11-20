@@ -1,28 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:hiddify/features/profile/notifier/profile_notifier.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-class CabinetPage extends StatefulWidget {
+class CabinetPage extends ConsumerStatefulWidget {
   const CabinetPage({super.key, required this.onSubscriptionImported});
 
   final VoidCallback onSubscriptionImported;
 
   @override
-  State<CabinetPage> createState() => _CabinetPageState();
+  ConsumerState<CabinetPage> createState() => _CabinetPageState();
 }
 
-class _CabinetPageState extends State<CabinetPage> {
+class _CabinetPageState extends ConsumerState<CabinetPage> {
   late final WebViewController _controller;
   bool _isLoading = true;
 
-  static const String _cabinetUrl = 'https://cabinet.skydpi.online';
+  static const String _cabinetUrl = 'https://skydpi.online';
 
   @override
   void initState() {
     super.initState();
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(const Color(0xFF121318))
+      ..setBackgroundColor(const Color(0xFF0E0D15))
+      ..addJavaScriptChannel(
+        'XPlatformBridge',
+        onMessageReceived: (JavaScriptMessage message) {
+          _handleDeepLinkImport(message.message);
+        },
+      )
       ..setNavigationDelegate(
         NavigationDelegate(
           onPageStarted: (_) {
@@ -30,12 +38,28 @@ class _CabinetPageState extends State<CabinetPage> {
           },
           onPageFinished: (_) {
             if (mounted) setState(() => _isLoading = false);
+            // Перехватываем клики по deep-link ссылкам, если сайт открывает их через JS
+            _controller.runJavaScript('''
+              document.addEventListener('click', function(e) {
+                var a = e.target.closest('a');
+                if (a && a.href && (
+                  a.href.startsWith('xplatform://') ||
+                  a.href.startsWith('hiddify://') ||
+                  a.href.startsWith('happ://') ||
+                  a.href.startsWith('v2raytun://') ||
+                  a.href.startsWith('v2rayng://')
+                )) {
+                  e.preventDefault();
+                  XPlatformBridge.postMessage(a.href);
+                }
+              }, true);
+            ''');
           },
           onNavigationRequest: (NavigationRequest request) {
             final url = request.url;
 
-            // Перехватываем deep-link ссылки автоимпорта из кабинета Bedolaga
-            if (url.startsWith('hiddify://') ||
+            if (url.startsWith('xplatform://') ||
+                url.startsWith('hiddify://') ||
                 url.startsWith('happ://') ||
                 url.startsWith('v2rayng://') ||
                 url.startsWith('v2raytun://')) {
@@ -43,7 +67,6 @@ class _CabinetPageState extends State<CabinetPage> {
               return NavigationDecision.prevent;
             }
 
-            // Внешние ссылки (Telegram-бот, оплата и т.д.) открываем в системе
             if (!url.startsWith(_cabinetUrl) &&
                 !url.startsWith('https://telegram.org')) {
               final uri = Uri.tryParse(url);
@@ -71,19 +94,18 @@ class _CabinetPageState extends State<CabinetPage> {
         final idx = rawUrl.indexOf('https://');
         if (idx != -1) {
           subUrl = Uri.decodeFull(rawUrl.substring(idx));
+        } else {
+          final httpIdx = rawUrl.indexOf('http://');
+          if (httpIdx != -1) {
+            subUrl = Uri.decodeFull(rawUrl.substring(httpIdx));
+          }
         }
       }
     }
 
     if (subUrl != null && subUrl.startsWith('http')) {
-      // Передаем ссылку в сам клиент через встроенную схему hiddify://import/
-      final importUri = Uri.parse('hiddify://import/$subUrl');
-      await launchUrl(importUri, mode: LaunchMode.externalApplication);
-
+      await ref.read(addProfileNotifierProvider.notifier).addClipboard(subUrl);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Подписка передана в клиент! Нажмите кнопку подключения.')),
-        );
         widget.onSubscriptionImported();
       }
     }
@@ -92,21 +114,28 @@ class _CabinetPageState extends State<CabinetPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Личный кабинет'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded),
-            onPressed: () => _controller.reload(),
-          ),
-        ],
-      ),
-      body: Stack(
-        children: [
-          WebViewWidget(controller: _controller),
-          if (_isLoading)
-            const Center(child: CircularProgressIndicator()),
-        ],
+      backgroundColor: const Color(0xFF0E0D15),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            WebViewWidget(controller: _controller),
+            if (_isLoading)
+              const Center(
+                child: CircularProgressIndicator(color: Color(0xFF7B61FF)),
+              ),
+            Positioned(
+              right: 12,
+              bottom: 12,
+              child: FloatingActionButton.small(
+                heroTag: 'reload_cabinet',
+                backgroundColor: const Color(0xFF1A1829),
+                foregroundColor: const Color(0xFF7B61FF),
+                onPressed: () => _controller.reload(),
+                child: const Icon(Icons.refresh_rounded, size: 20),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
