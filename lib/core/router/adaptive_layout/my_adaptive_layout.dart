@@ -7,6 +7,7 @@ import 'package:hiddify/core/model/constants.dart';
 import 'package:hiddify/core/router/adaptive_layout/shell_route_action.dart';
 import 'package:hiddify/core/router/go_router/helper/active_breakpoint_notifier.dart';
 import 'package:hiddify/core/router/go_router/routing_config_notifier.dart';
+import 'package:hiddify/features/home/widget/cabinet_page.dart';
 import 'package:hiddify/features/stats/widget/side_bar_stats_overview.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -17,7 +18,7 @@ class MyAdaptiveLayout extends HookConsumerWidget {
     required this.isMobileBreakpoint,
     required this.showProfilesAction,
   });
-  // managed by go router(Shell Route)
+
   final StatefulNavigationShell navigationShell;
   final bool isMobileBreakpoint;
   final bool showProfilesAction;
@@ -25,7 +26,8 @@ class MyAdaptiveLayout extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = ref.watch(translationsProvider).requireValue;
-    // focus switch management
+    final showCabinet = useState(false);
+
     final primaryFocusHash = useState<int?>(null);
     final navScopeNode = useFocusScopeNode();
     useEffect(() {
@@ -35,7 +37,6 @@ class MyAdaptiveLayout extends HookConsumerWidget {
         if (event is KeyDownEvent) {
           primaryFocusHash.value = FocusManager.instance.primaryFocus.hashCode;
         } else {
-          // focus node does not change => true.
           if (primaryFocusHash.value == FocusManager.instance.primaryFocus.hashCode) {
             if (branchesScope.values.any((node) => node.hasFocus)) {
               navScopeNode.requestFocus();
@@ -53,38 +54,26 @@ class MyAdaptiveLayout extends HookConsumerWidget {
         HardwareKeyboard.instance.removeHandler(handler);
       };
     }, [isMobileBreakpoint, showProfilesAction, navigationShell.currentIndex]);
-    // Owns the system back press for the whole shell.
-    //
-    // It has to sit here, on the visible shell, and nowhere else. A PopScope
-    // inside a branch stays mounted after the user leaves that branch, and go
-    // router then lets it answer presses meant for another branch, which locks
-    // the back button for good (flutter/flutter#193098).
-    //
-    // canPop is always false so the platform always routes the press to us.
-    // Otherwise Android closes the app without calling into Flutter at all, and
-    // no callback of ours ever runs. A press that a branch can handle is popped
-    // by go router before it reaches here, so this only sees presses at the
-    // root of a branch.
+
+    final mobileSelectedIndex = showCabinet.value
+        ? 1
+        : (navigationShell.currentIndex == 0 ? 0 : 2);
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
+        if (showCabinet.value) {
+          showCabinet.value = false;
+          return;
+        }
         final homeIndex = getIndexOfBranch(isMobileBreakpoint, showProfilesAction, 'home');
         if (navigationShell.currentIndex != homeIndex) {
-          // on another branch: go home instead of closing the app
           navigationShell.goBranch(homeIndex);
         } else {
-          // already home: this is the way out of the app
           SystemNavigator.pop();
         }
       },
-      // Keeps the claim above alive on the platform side.
-      //
-      // Every branch navigator broadcasts whether it can handle a back press,
-      // and the last broadcast wins. Popping a page inside a branch leaves it
-      // reporting "cannot handle", which reaches Android and makes it close the
-      // app on the next press without ever calling Flutter. The PopScope above
-      // always handles the press, so that report is wrong: replace it.
       child: NotificationListener<NavigationNotification>(
         onNotification: (notification) {
           if (notification.canHandlePop) return false;
@@ -94,7 +83,18 @@ class MyAdaptiveLayout extends HookConsumerWidget {
         child: Material(
           child: Scaffold(
             body: isMobileBreakpoint
-                ? navigationShell
+                ? IndexedStack(
+                    index: showCabinet.value ? 1 : 0,
+                    children: [
+                      navigationShell,
+                      CabinetPage(
+                        onSubscriptionImported: () {
+                          showCabinet.value = false;
+                          navigationShell.goBranch(0);
+                        },
+                      ),
+                    ],
+                  )
                 : Row(
                     children: [
                       FocusScope(
@@ -103,7 +103,7 @@ class MyAdaptiveLayout extends HookConsumerWidget {
                           extended: Breakpoint(context).isDesktop(),
                           destinations: _navRailDests(_actions(t, showProfilesAction, isMobileBreakpoint)),
                           selectedIndex: navigationShell.currentIndex,
-                          onDestinationSelected: (index) => _onTap(context, index),
+                          onDestinationSelected: (index) => _onTap(context, index, showCabinet),
                           trailing: Breakpoint(context).isDesktop()
                               ? const Expanded(
                                   child: Align(
@@ -114,13 +114,6 @@ class MyAdaptiveLayout extends HookConsumerWidget {
                               : null,
                         ),
                       ),
-                      // Keeps the rail visible to screen readers (#2097).
-                      //
-                      // Every page route draws a modal barrier, and its
-                      // BlockSemantics drops all the semantics painted before
-                      // it, up to the nearest container. Without this boundary
-                      // that reached the rail, so NVDA saw no sidebar at all
-                      // (flutter/flutter#135656).
                       Expanded(child: Semantics(container: true, child: navigationShell)),
                     ],
                   ),
@@ -128,9 +121,9 @@ class MyAdaptiveLayout extends HookConsumerWidget {
                 ? FocusScope(
                     node: navScopeNode,
                     child: NavigationBar(
-                      selectedIndex: navigationShell.currentIndex <= 1 ? navigationShell.currentIndex : 0,
+                      selectedIndex: mobileSelectedIndex,
                       destinations: _navDests(_actions(t, showProfilesAction, isMobileBreakpoint)),
-                      onDestinationSelected: (index) => _onTap(context, index),
+                      onDestinationSelected: (index) => _onTap(context, index, showCabinet),
                     ),
                   )
                 : null,
@@ -140,13 +133,23 @@ class MyAdaptiveLayout extends HookConsumerWidget {
     );
   }
 
-  // shell route action onTap
-  void _onTap(BuildContext context, int index) {
+  void _onTap(BuildContext context, int index, ValueNotifier<bool> showCabinet) {
+    if (isMobileBreakpoint) {
+      if (index == 1) {
+        showCabinet.value = true;
+        return;
+      }
+      showCabinet.value = false;
+      final branchIndex = index == 0 ? 0 : 1;
+      navigationShell.goBranch(branchIndex, initialLocation: branchIndex == navigationShell.currentIndex);
+      return;
+    }
     navigationShell.goBranch(index, initialLocation: index == navigationShell.currentIndex);
   }
 
   List<ShellRouteAction> _actions(Translations t, bool showProfilesAction, bool isMobileBreakpoint) => [
-    ShellRouteAction(Icons.power_settings_new_rounded, t.pages.home.title),
+    ShellRouteAction(Icons.power_settings_new_rounded, 'VPN'),
+    if (isMobileBreakpoint) const ShellRouteAction(Icons.account_circle_rounded, 'Кабинет'),
     if (showProfilesAction && !isMobileBreakpoint) ShellRouteAction(Icons.view_list_rounded, t.pages.profiles.title),
     ShellRouteAction(Icons.settings_rounded, t.pages.settings.title),
     if (!isMobileBreakpoint) ShellRouteAction(Icons.description_rounded, t.pages.logs.title),
