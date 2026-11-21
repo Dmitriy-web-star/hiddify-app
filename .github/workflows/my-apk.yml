@@ -25,13 +25,22 @@ jobs:
           dart run build_runner build --delete-conflicting-outputs
           make android-libs
 
-      - name: Sync Custom Icons
+      - name: Sync Custom Icons & Branding
         run: |
+          rm -rf android/app/src/main/res/mipmap-anydpi-v26
           find android/app/src/main/res/mipmap-* -name "ic_launcher*.webp" -delete
           for dir in android/app/src/main/res/mipmap-mdpi android/app/src/main/res/mipmap-hdpi android/app/src/main/res/mipmap-xhdpi android/app/src/main/res/mipmap-xxhdpi android/app/src/main/res/mipmap-xxxhdpi; do
             cp assets/images/source/ic_launcher_foreground.png "$dir/ic_launcher.png"
             cp assets/images/source/ic_launcher_foreground.png "$dir/ic_launcher_round.png"
           done
+          cp assets/images/source/ic_launcher_foreground.png android/app/src/main/res/drawable/ic_launcher_splash.png || true
+          cat << 'EOF' > assets/images/logo.svg
+          <svg xmlns="http://w3.org" viewBox="0 0 120 120">
+            <rect width="120" height="120" rx="28" fill="#181624"/>
+            <path d="M60 22L28 36v26c0 21.5 13.7 41.6 32 48 18.3-6.4 32-26.5 32-48V36L60 22z" fill="#7B61FF"/>
+            <path d="M47 47l26 26M73 47L47 73" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
+          </svg>
+          EOF
 
       - name: Build Debug APK
         run: flutter build apk --debug --target-platform android-arm64
