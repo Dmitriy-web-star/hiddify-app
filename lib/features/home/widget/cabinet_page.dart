@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hiddify/features/profile/notifier/active_profile_notifier.dart';
 import 'package:hiddify/features/profile/notifier/profile_notifier.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -16,8 +17,9 @@ class CabinetPage extends ConsumerStatefulWidget {
 class _CabinetPageState extends ConsumerState<CabinetPage> {
   late final WebViewController _controller;
   bool _isLoading = true;
+  bool _isImporting = false;
 
-  static const String _cabinetUrl = 'https://cabinet.skydpi.online';
+  static const String _cabinetUrl = 'https://skydpi.online';
 
   @override
   void initState() {
@@ -58,14 +60,12 @@ class _CabinetPageState extends ConsumerState<CabinetPage> {
                   return false;
                 }
 
-                // 1. Перехват window.open
                 const origOpen = window.open;
                 window.open = function(url) {
                   if (checkAndSend(url)) return null;
                   return origOpen.apply(this, arguments);
                 };
 
-                // 2. Перехват кликов по любым элементам и ссылкам
                 document.addEventListener('click', function(e) {
                   var a = e.target.closest('a');
                   if (a && checkAndSend(a.href)) {
@@ -75,7 +75,6 @@ class _CabinetPageState extends ConsumerState<CabinetPage> {
                   }
                 }, true);
 
-                // 3. Перехват создания скрытых iframe (так openAppScheme.ts часто открывает deep-link)
                 const origAppend = Element.prototype.appendChild;
                 Element.prototype.appendChild = function(el) {
                   if (el && el.tagName === 'IFRAME' && checkAndSend(el.src)) {
@@ -115,6 +114,7 @@ class _CabinetPageState extends ConsumerState<CabinetPage> {
   }
 
   Future<void> _handleDeepLinkImport(String rawUrl) async {
+    if (_isImporting) return;
     String? subUrl;
     final uri = Uri.tryParse(rawUrl);
 
@@ -135,9 +135,17 @@ class _CabinetPageState extends ConsumerState<CabinetPage> {
     }
 
     if (subUrl != null && subUrl.startsWith('http')) {
-      await ref.read(addProfileNotifierProvider.notifier).addClipboard(subUrl);
-      if (mounted) {
-        widget.onSubscriptionImported();
+      setState(() => _isImporting = true);
+      try {
+        await ref.read(addProfileNotifierProvider.notifier).addClipboard(subUrl);
+        // Ждем, пока база данных обновит активный профиль
+        await Future.delayed(const Duration(milliseconds: 600));
+        await ref.read(activeProfileProvider.future);
+      } finally {
+        if (mounted) {
+          setState(() => _isImporting = false);
+          widget.onSubscriptionImported();
+        }
       }
     }
   }
@@ -153,6 +161,27 @@ class _CabinetPageState extends ConsumerState<CabinetPage> {
             if (_isLoading)
               const Center(
                 child: CircularProgressIndicator(color: Color(0xFF7B61FF)),
+              ),
+            if (_isImporting)
+              Container(
+                color: const Color(0xE60E0D15),
+                child: const Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(color: Color(0xFF7B61FF)),
+                      SizedBox(height: 16),
+                      Text(
+                        'Загрузка подписки и серверов...',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             Positioned(
               right: 12,
