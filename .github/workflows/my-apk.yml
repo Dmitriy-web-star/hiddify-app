@@ -37,6 +37,7 @@ jobs:
 
       - name: Sync Custom Icons & Branding
         run: |
+          sed -i 's/app\.hiddify\.com/online.skydpi.xplatform/g' android/app/build.gradle* android/app/src/main/AndroidManifest.xml || true
           mkdir -p android/app/src/main/res/mipmap-anydpi-v26
           rm -f android/app/src/main/res/mipmap-anydpi-v26/ic_launcher*.xml
           NS_ANDROID=$(printf '%s:%s%s.%s/%s/%s/%s' 'http' '//' 'schemas' 'android.com' 'apk' 'res' 'android')
