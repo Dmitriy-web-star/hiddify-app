@@ -19,7 +19,7 @@ class _CabinetPageState extends ConsumerState<CabinetPage> {
   bool _isLoading = true;
   bool _isImporting = false;
 
-  static const String _cabinetUrl = 'https://skydpi.online';
+  static const String _cabinetUrl = 'https://cabinet.skydpi.online';
 
   @override
   void initState() {
