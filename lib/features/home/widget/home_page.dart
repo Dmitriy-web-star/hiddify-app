@@ -1,31 +1,56 @@
-import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:gap/gap.dart';
-import 'package:hiddify/core/app_info/app_info_provider.dart';
-import 'package:hiddify/core/localization/translations.dart';
-import 'package:hiddify/core/router/bottom_sheets/bottom_sheets_notifier.dart';
-import 'package:hiddify/features/home/widget/connection_button.dart';
-import 'package:hiddify/features/home/widget/local_proxy_hint.dart';
+import 'package:hiddify/features/connection/model/connection_status.dart';
+import 'package:hiddify/features/connection/notifier/connection_notifier.dart';
 import 'package:hiddify/features/profile/notifier/active_profile_notifier.dart';
 import 'package:hiddify/features/profile/widget/profile_tile.dart';
 import 'package:hiddify/features/proxy/active/active_proxy_card.dart';
 import 'package:hiddify/features/proxy/active/active_proxy_delay_indicator.dart';
-import 'package:hiddify/gen/assets.gen.dart';
+import 'package:hiddify/features/proxy/active/active_proxy_notifier.dart';
+import 'package:hiddify/features/proxy/overview/proxies_overview_page.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:sliver_tools/sliver_tools.dart';
 
 class HomePage extends HookConsumerWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final t = ref.watch(translationsProvider).requireValue;
-    // final hasAnyProfile = ref.watch(hasAnyProfileProvider);
     final activeProfile = ref.watch(activeProfileProvider);
+    final connectionState = ref.watch(connectionNotifierProvider);
+    final activeCard = ref.watch(activeProxyCardProvider);
+
+    // Мгновенный отклик на нажатие кнопки, пока ядро sing-box запускается
+    final pendingTap = useState(false);
+
+    final status = connectionState.valueOrNull ?? const Disconnected();
+    final isConnected = status is Connected;
+    final isBusy = pendingTap.value || status is Connecting || status is Disconnecting || status is Waiting;
+
+    useEffect(() {
+      if (status is Connected || status is Disconnected) {
+        pendingTap.value = false;
+      }
+      return null;
+    }, [status]);
+
+    final Color ringColor = isConnected
+        ? const Color(0xFF00E676)
+        : isBusy
+            ? const Color(0xFF7B61FF)
+            : const Color(0xFF3A3556);
+
+    final String statusText = isConnected
+        ? 'Подключено'
+        : isBusy
+            ? 'Подключение...'
+            : 'Нажмите для подключения';
 
     return Scaffold(
-           appBar: AppBar(
+      backgroundColor: const Color(0xFF0E0D15),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF0E0D15),
         title: const Row(
           children: [
             Icon(Icons.shield_rounded, color: Color(0xFF7B61FF), size: 24),
@@ -37,181 +62,169 @@ class HomePage extends HookConsumerWidget {
           ],
         ),
       ),
-      
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          RepaintBoundary(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                // A sky behind the connect button, as at an eclipse: in dark mode a touch lighter round
-                // the button, fading to the theme's own dark; in light mode brightest there, a touch
-                // darker towards the edges. Both barely there, centred on where the button sits.
-                gradient: theme.brightness == Brightness.dark
-                    ? RadialGradient(
-                        center: const Alignment(0, -.15),
-                        radius: .85,
-                        colors: [
-                          Colors.white.withValues(alpha: .045),
-                          Colors.white.withValues(alpha: .015),
-                          Colors.white.withValues(alpha: 0),
-                        ],
-                        stops: const [0, .45, 1],
-                      )
-                    : RadialGradient(
-                        center: const Alignment(0, -.15),
-                        radius: 1.1,
-                        colors: [
-                          Colors.white.withValues(alpha: .55),
-                          Colors.white.withValues(alpha: 0),
-                          Colors.black.withValues(alpha: .045),
-                        ],
-                        stops: const [0, .5, 1],
-                      ),
-                image: DecorationImage(
-                  image: const AssetImage('assets/images/world_map.png'), // Replace with your image path
-                  fit: BoxFit.cover,
-                  opacity: 0.09,
-                  colorFilter: theme.brightness == Brightness.dark
-                      ? ColorFilter.mode(Colors.white.withValues(alpha: .15), BlendMode.srcIn) //
-                      : ColorFilter.mode(
-                          Colors.grey.withValues(alpha: 1),
-                          BlendMode.srcATop,
-                        ), // Apply white tint in dark mode
-                ),
-              ),
-            ),
-          ),
-          Stack(
-            alignment: Alignment.center,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
             children: [
-              Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    maxWidth: 600, // Set the maximum width here
+              // Карточка активной подписки сверху
+              switch (activeProfile) {
+                AsyncData(value: final profile?) => ProfileTile(
+                    profile: profile,
+                    isMain: true,
+                    margin: const EdgeInsets.only(top: 8),
                   ),
-                  // The page does not move under the finger: no bounce (iOS) or stretch (Android) when it
-                  // fits the screen. It still scrolls, without them, when it does not (a small screen or a
-                  // large font).
-                  child: ScrollConfiguration(
-                    behavior: ScrollConfiguration.of(context).copyWith(overscroll: false),
-                    child: CustomScrollView(
-                      physics: const ClampingScrollPhysics(),
-                      slivers: [
-                        // switch (activeProfile) {
-                        // AsyncData(value: final profile?) =>
-                        MultiSliver(
-                          children: [
-                            // const Gap(100),
-                            switch (activeProfile) {
-                              AsyncData(value: final profile?) => ProfileTile(
-                                profile: profile,
-                                isMain: true,
-                                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              ),
-                              _ => const Text(""),
-                            },
-                            const SliverFillRemaining(
-                              hasScrollBody: false,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [ConnectionButton(), ActiveProxyDelayIndicator()],
-                                    ),
-                                  ),
-                                  ActiveProxyFooter(),
-                                  Gap(32),
-                                ],
-                              ),
+                _ => Container(
+                    margin: const EdgeInsets.only(top: 8),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF181624),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFF2A263D)),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.info_outline_rounded, color: Color(0xFF7B61FF)),
+                        Gap(12),
+                        Expanded(
+                          child: Text(
+                            'Нет активной подписки. Откройте вкладку «Кабинет» внизу экрана.',
+                            style: TextStyle(color: Colors.white70, fontSize: 13),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              },
+
+              // Центральная кнопка подключения в стиле Happ (без логотипа Hi)
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        HapticFeedback.mediumImpact();
+                        pendingTap.value = true;
+                        ref.read(connectionNotifierProvider.notifier).toggleConnection();
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        width: 164,
+                        height: 164,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: const Color(0xFF181624),
+                          border: Border.all(color: ringColor, width: 3.5),
+                          boxShadow: [
+                            BoxShadow(
+                              color: ringColor.withValues(alpha: isConnected || isBusy ? 0.38 : 0.12),
+                              blurRadius: 32,
+                              spreadRadius: 4,
                             ),
                           ],
                         ),
-                        // AsyncData() => switch (hasAnyProfile) {
-                        //     AsyncData(value: true) => const EmptyActiveProfileHomeBody(),
-                        //     _ => const EmptyProfilesHomeBody(),
-                        //   },
-                        // AsyncError(:final error) => SliverErrorBodyPlaceholder(t.presentShortError(error)),
-                        // _ => const SliverToBoxAdapter(),
-                        // },
+                        child: Center(
+                          child: isBusy && !isConnected
+                              ? const SizedBox(
+                                  width: 48,
+                                  height: 48,
+                                  child: CircularProgressIndicator(
+                                    color: Color(0xFF7B61FF),
+                                    strokeWidth: 3.5,
+                                  ),
+                                )
+                              : Icon(
+                                  Icons.power_settings_new_rounded,
+                                  size: 68,
+                                  color: isConnected ? const Color(0xFF00E676) : Colors.white,
+                                ),
+                        ),
+                      ),
+                    ),
+                    const Gap(20),
+                    Text(
+                      statusText,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: isConnected ? const Color(0xFF00E676) : Colors.white,
+                      ),
+                    ),
+                    const Gap(6),
+                    if (isConnected) const ActiveProxyDelayIndicator(),
+                  ],
+                ),
+              ),
+
+              // Карточка активного сервера и кнопка списка всех серверов (как в Happ)
+              if (isConnected) const ActiveProxyFooter(),
+
+              Padding(
+                padding: const EdgeInsets.only(bottom: 24, top: 8),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      useSafeArea: true,
+                      backgroundColor: const Color(0xFF0E0D15),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                      ),
+                      builder: (_) => const SizedBox(
+                        height: 620,
+                        child: ProxiesOverviewPage(),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF181624),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFF2B2740)),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF7B61FF).withValues(alpha: 0.16),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(Icons.public_rounded, color: Color(0xFF7B61FF), size: 22),
+                        ),
+                        const Gap(12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Выбор локации / серверов',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              Text(
+                                activeCard != null ? 'Нажмите, чтобы сменить сервер' : 'Все серверы подписки и пинг',
+                                style: const TextStyle(color: Colors.white54, fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(Icons.keyboard_arrow_up_rounded, color: Colors.white70),
                       ],
                     ),
                   ),
                 ),
               ),
-              if (ref.watch(hasAnyProfileProvider).value ?? false)
-                Positioned(
-                  right: 0,
-                  left: 0,
-                  bottom: 0,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    // tabs of either height stand on the bottom edge
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      // in proxy mode, a smaller tab beside this one on how to point apps at the proxy
-                      const Flexible(child: LocalProxyHint()),
-                      Material(
-                        color: theme.colorScheme.primaryContainer,
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(16),
-                          topRight: Radius.circular(16),
-                        ),
-                        child: InkWell(
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(16),
-                            topRight: Radius.circular(16),
-                          ),
-                          onTap: () => ref.read(bottomSheetsNotifierProvider.notifier).showQuickSettings(),
-                          child: Container(
-                            height: 32,
-                            padding: const EdgeInsetsDirectional.only(start: 16, end: 8),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(t.pages.home.quickSettings),
-                                const Gap(4),
-                                const Icon(Icons.arrow_drop_up_rounded, size: 16),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
             ],
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class AppVersionLabel extends HookConsumerWidget {
-  const AppVersionLabel({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final t = ref.watch(translationsProvider).requireValue;
-    final theme = Theme.of(context);
-
-    final version = ref.watch(appInfoProvider).requireValue.presentVersion;
-    if (version.isBlank) return const SizedBox();
-
-    return Semantics(
-      label: t.common.version,
-      button: false,
-      child: Container(
-        decoration: BoxDecoration(color: theme.colorScheme.secondaryContainer, borderRadius: BorderRadius.circular(4)),
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-        child: Text(
-          version,
-          textDirection: TextDirection.ltr,
-          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSecondaryContainer),
         ),
       ),
     );
