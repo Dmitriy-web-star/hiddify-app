@@ -49,25 +49,32 @@ class HomePage extends HookConsumerWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFF0E0D15),
-            appBar: AppBar(
+                 appBar: AppBar(
         backgroundColor: const Color(0xFF0E0D15),
         title: Row(
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.asset(
-                'assets/images/source/ic_launcher_foreground.png',
+                'assets/images/tray_icon.png',
                 width: 28,
                 height: 28,
-                fit: BoxFit.cover,
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => const Icon(
+                  Icons.shield_rounded,
+                  color: Color(0xFF7B61FF),
+                  size: 24,
+                ),
               ),
             ),
             const Gap(10),
-            const Text('X-Platform VPN', style: TextStyle(fontWeight: FontWeight.w700, letterSpacing: 0.4)),
+            const Text(
+              'X-Platform VPN',
+              style: TextStyle(fontWeight: FontWeight.w700, letterSpacing: 0.4),
+            ),
           ],
         ),
-
-        actions: [
+           actions: [
           IconButton(
             tooltip: 'Раздача прокси / VPN',
             icon: const Icon(Icons.wifi_tethering_rounded, color: Colors.white70),
