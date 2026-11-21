@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:gap/gap.dart';
+import 'package:hiddify/core/router/bottom_sheets/bottom_sheets_notifier.dart';
+import 'package:hiddify/core/router/dialog/dialog_notifier.dart';
 import 'package:hiddify/features/connection/model/connection_status.dart';
 import 'package:hiddify/features/connection/notifier/connection_notifier.dart';
 import 'package:hiddify/features/profile/notifier/active_profile_notifier.dart';
@@ -20,8 +22,6 @@ class HomePage extends HookConsumerWidget {
     final activeProfile = ref.watch(activeProfileProvider);
     final connectionState = ref.watch(connectionNotifierProvider);
     final activeCard = ref.watch(activeProxyCardProvider);
-
-    // Мгновенный отклик на нажатие кнопки, пока ядро sing-box запускается
     final pendingTap = useState(false);
 
     final status = connectionState.valueOrNull ?? const Disconnected();
@@ -35,13 +35,13 @@ class HomePage extends HookConsumerWidget {
       return null;
     }, [status]);
 
-    final Color ringColor = isConnected
+    final ringColor = isConnected
         ? const Color(0xFF00E676)
         : isBusy
             ? const Color(0xFF7B61FF)
             : const Color(0xFF3A3556);
 
-    final String statusText = isConnected
+    final statusText = isConnected
         ? 'Подключено'
         : isBusy
             ? 'Подключение...'
@@ -55,19 +55,28 @@ class HomePage extends HookConsumerWidget {
           children: [
             Icon(Icons.shield_rounded, color: Color(0xFF7B61FF), size: 24),
             Gap(10),
-            Text(
-              'X-Platform VPN',
-              style: TextStyle(fontWeight: FontWeight.w700, letterSpacing: 0.4),
-            ),
+            Text('X-Platform VPN', style: TextStyle(fontWeight: FontWeight.w700, letterSpacing: 0.4)),
           ],
         ),
+        actions: [
+          IconButton(
+            tooltip: 'Раздача прокси / VPN',
+            icon: const Icon(Icons.wifi_tethering_rounded, color: Colors.white70),
+            onPressed: () => ref.read(dialogNotifierProvider.notifier).showLocalProxy(),
+          ),
+          IconButton(
+            tooltip: 'Подключить Android TV (QR)',
+            icon: const Icon(Icons.qr_code_scanner_rounded, color: Color(0xFF7B61FF)),
+            onPressed: () => ref.read(bottomSheetsNotifierProvider.notifier).showAddProfile(),
+          ),
+          const Gap(6),
+        ],
       ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
             children: [
-              // Карточка активной подписки сверху
               switch (activeProfile) {
                 AsyncData(value: final profile?) => ProfileTile(
                     profile: profile,
@@ -96,8 +105,6 @@ class HomePage extends HookConsumerWidget {
                     ),
                   ),
               },
-
-              // Центральная кнопка подключения в стиле Happ (без логотипа Hi)
               Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -129,10 +136,7 @@ class HomePage extends HookConsumerWidget {
                               ? const SizedBox(
                                   width: 48,
                                   height: 48,
-                                  child: CircularProgressIndicator(
-                                    color: Color(0xFF7B61FF),
-                                    strokeWidth: 3.5,
-                                  ),
+                                  child: CircularProgressIndicator(color: Color(0xFF7B61FF), strokeWidth: 3.5),
                                 )
                               : Icon(
                                   Icons.power_settings_new_rounded,
@@ -156,10 +160,7 @@ class HomePage extends HookConsumerWidget {
                   ],
                 ),
               ),
-
-              // Карточка активного сервера и кнопка списка всех серверов (как в Happ)
               if (isConnected) const ActiveProxyFooter(),
-
               Padding(
                 padding: const EdgeInsets.only(bottom: 24, top: 8),
                 child: InkWell(
@@ -173,10 +174,7 @@ class HomePage extends HookConsumerWidget {
                       shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                       ),
-                      builder: (_) => const SizedBox(
-                        height: 620,
-                        child: ProxiesOverviewPage(),
-                      ),
+                      builder: (_) => const SizedBox(height: 620, child: ProxiesOverviewPage()),
                     );
                   },
                   child: Container(
@@ -204,11 +202,7 @@ class HomePage extends HookConsumerWidget {
                             children: [
                               const Text(
                                 'Выбор локации / серверов',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 15,
-                                ),
+                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15),
                               ),
                               Text(
                                 activeCard != null ? 'Нажмите, чтобы сменить сервер' : 'Все серверы подписки и пинг',
