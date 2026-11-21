@@ -1,3 +1,4 @@
+
 name: Build My APK
 
 on:
@@ -39,13 +40,8 @@ jobs:
         run: |
           mkdir -p android/app/src/main/res/mipmap-anydpi-v26
           rm -f android/app/src/main/res/mipmap-anydpi-v26/ic_launcher*.xml
-          cat << 'EOF' > android/app/src/main/res/mipmap-anydpi-v26/ic_banner.xml
-          <?xml version="1.0" encoding="utf-8"?>
-          <adaptive-icon xmlns:android="http://android.com">
-              <background android:drawable="@android:color/white"/>
-              <foreground android:drawable="@mipmap/ic_launcher"/>
-          </adaptive-icon>
-          EOF
+          NS_ANDROID="http://schemas.""://android.com"
+          printf '<?xml version="1.0" encoding="utf-8"?>\n<adaptive-icon xmlns:android="%s">\n    <background android:drawable="@android:color/white"/>\n    <foreground android:drawable="@mipmap/ic_launcher"/>\n</adaptive-icon>\n' "$NS_ANDROID" > android/app/src/main/res/mipmap-anydpi-v26/ic_banner.xml
           find android/app/src/main/res/mipmap-* -name "ic_launcher*.webp" -delete
           for dir in android/app/src/main/res/mipmap-mdpi android/app/src/main/res/mipmap-hdpi android/app/src/main/res/mipmap-xhdpi android/app/src/main/res/mipmap-xxhdpi android/app/src/main/res/mipmap-xxxhdpi; do
             cp assets/images/source/ic_launcher_foreground.png "$dir/ic_launcher.png"
@@ -58,11 +54,8 @@ jobs:
           sed -i 's/#121318/#0E0D15/g' pubspec.yaml
           dart run flutter_native_splash:create
           B64=$(base64 -w 0 assets/images/source/logo_transparent.png)
-          cat << EOF > assets/images/logo.svg
-          <svg xmlns="http://w3.org" viewBox="0 0 120 120">
-            <image href="data:image/png;base64,$B64" x="4" y="4" width="112" height="112"/>
-          </svg>
-          EOF
+          NS_SVG="http://www.""w3.org/2000/svg"
+          printf '<svg xmlns="%s" viewBox="0 0 120 120"><image href="data:image/png;base64,%s" x="4" y="4" width="112" height="112"/></svg>\n' "$NS_SVG" "$B64" > assets/images/logo.svg
 
       - name: Build Release APK
         run: |
