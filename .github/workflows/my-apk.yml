@@ -19,6 +19,16 @@ jobs:
           flutter-version: '3.38.5'
           cache: true
 
+      - name: Setup Release Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/xplatform-release.jks
+          cat << 'EOF' > android/key.properties
+          storePassword=XPlatform2026!
+          keyPassword=XPlatform2026!
+          keyAlias=xplatform
+          storeFile=xplatform-release.jks
+          EOF
+
       - name: Prepare Hiddify Core & Codegen
         run: |
           flutter pub get
@@ -54,11 +64,13 @@ jobs:
           </svg>
           EOF
 
-      - name: Build Debug APK
-        run: flutter build apk --debug --target-platform android-arm64
+      - name: Build Release APK
+        run: |
+          flutter build apk --release --target-platform android-arm64
+          cp build/app/outputs/flutter-apk/app-release.apk X-Platform-VPN.apk
 
-      - name: Upload APK
+      - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
-          name: hiddify-app-debug
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          name: X-Platform-VPN
+          path: X-Platform-VPN.apk
