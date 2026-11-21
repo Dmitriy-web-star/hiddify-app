@@ -41,16 +41,16 @@ jobs:
             cp assets/images/source/ic_launcher_foreground.png "$dir/ic_launcher.png"
             cp assets/images/source/ic_launcher_foreground.png "$dir/ic_launcher_round.png"
           done
-          cp assets/images/source/ic_launcher_foreground.png assets/images/source/ic_launcher_splash.png
-          find android/app/src/main/res -name "*splash*.png" -exec cp assets/images/source/ic_launcher_foreground.png {} \;
+          cp assets/images/source/logo_transparent.png assets/images/tray_icon.png
+          cp assets/images/source/logo_transparent.png assets/images/source/ic_launcher_splash.png
+          find android/app/src/main/res -name "*splash*.png" -exec cp assets/images/source/logo_transparent.png {} \;
           sed -i 's/#FBF8FF/#0E0D15/g' pubspec.yaml
           sed -i 's/#121318/#0E0D15/g' pubspec.yaml
           dart run flutter_native_splash:create
-          cat << 'EOF' > assets/images/logo.svg
+          B64=$(base64 -w 0 assets/images/source/logo_transparent.png)
+          cat << EOF > assets/images/logo.svg
           <svg xmlns="http://w3.org" viewBox="0 0 120 120">
-            <rect width="120" height="120" rx="28" fill="#181624"/>
-            <path d="M60 22L28 36v26c0 21.5 13.7 41.6 32 48 18.3-6.4 32-26.5 32-48V36L60 22z" fill="#7B61FF"/>
-            <path d="M47 47l26 26M73 47L47 73" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
+            <image href="data:image/png;base64,$B64" x="4" y="4" width="112" height="112"/>
           </svg>
           EOF
 
