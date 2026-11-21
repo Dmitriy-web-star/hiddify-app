@@ -1,4 +1,3 @@
-
 name: Build My APK
 
 on:
@@ -40,7 +39,7 @@ jobs:
         run: |
           mkdir -p android/app/src/main/res/mipmap-anydpi-v26
           rm -f android/app/src/main/res/mipmap-anydpi-v26/ic_launcher*.xml
-          NS_ANDROID="http://schemas.""://android.com"
+          NS_ANDROID=$(printf '%s:%s%s.%s/%s/%s/%s' 'http' '//' 'schemas' 'android.com' 'apk' 'res' 'android')
           printf '<?xml version="1.0" encoding="utf-8"?>\n<adaptive-icon xmlns:android="%s">\n    <background android:drawable="@android:color/white"/>\n    <foreground android:drawable="@mipmap/ic_launcher"/>\n</adaptive-icon>\n' "$NS_ANDROID" > android/app/src/main/res/mipmap-anydpi-v26/ic_banner.xml
           find android/app/src/main/res/mipmap-* -name "ic_launcher*.webp" -delete
           for dir in android/app/src/main/res/mipmap-mdpi android/app/src/main/res/mipmap-hdpi android/app/src/main/res/mipmap-xhdpi android/app/src/main/res/mipmap-xxhdpi android/app/src/main/res/mipmap-xxxhdpi; do
@@ -54,7 +53,7 @@ jobs:
           sed -i 's/#121318/#0E0D15/g' pubspec.yaml
           dart run flutter_native_splash:create
           B64=$(base64 -w 0 assets/images/source/logo_transparent.png)
-          NS_SVG="http://www.""w3.org/2000/svg"
+          NS_SVG=$(printf '%s:%s%s.%s/%s/%s' 'http' '//' 'www' 'w3.org' '2000' 'svg')
           printf '<svg xmlns="%s" viewBox="0 0 120 120"><image href="data:image/png;base64,%s" x="4" y="4" width="112" height="112"/></svg>\n' "$NS_SVG" "$B64" > assets/images/logo.svg
 
       - name: Build Release APK
