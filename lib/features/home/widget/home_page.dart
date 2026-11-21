@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
+import 'package:hiddify/features/profile/model/profile_entity.dart';
+import 'package:hiddify/features/profile/notifier/profile_notifier.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:gap/gap.dart';
@@ -23,6 +26,16 @@ class HomePage extends HookConsumerWidget {
     final connectionState = ref.watch(connectionNotifierProvider);
     final activeCard = ref.watch(activeProxyCardProvider);
     final pendingTap = useState(false);
+        // Автообновление подписки каждый час
+    useEffect(() {
+      final timer = Timer.periodic(const Duration(hours: 1), (_) {
+        final profile = ref.read(activeProfileProvider).valueOrNull;
+        if (profile is RemoteProfileEntity) {
+          ref.read(updateProfileNotifierProvider(profile.id).notifier).updateProfile(profile);
+        }
+      });
+      return timer.cancel;
+    }, const []);
 
     final status = connectionState.valueOrNull ?? const Disconnected();
     final isConnected = status is Connected;
