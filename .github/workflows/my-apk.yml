@@ -58,6 +58,8 @@ jobs:
           sed -i 's/#FBF8FF/#0E0D15/g' pubspec.yaml
           sed -i 's/#121318/#0E0D15/g' pubspec.yaml
           dart run flutter_native_splash:create
+          NS_SVG=$(printf '%s:%s%s.%s/%s/%s' 'http' '//' 'www' 'w3.org' '2000' 'svg')
+          printf '<svg xmlns="%s" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#7B61FF"/></svg>\n' "$NS_SVG" > assets/images/logo.svg
 
       - name: Build Release APK
         run: |
