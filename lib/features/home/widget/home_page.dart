@@ -204,14 +204,18 @@ class HomePage extends HookConsumerWidget {
                                   ),
                                 ],
                               ),
-                              child: Center(
-                                child: Icon(
-                                  Icons.power_settings_new_rounded,
-                                  size: 62,
-                                  color: isConnected
-                                      ? const Color(0xFF00E676)
-                                      : (isBusy ? const Color(0xFFFFE299) : Colors.white.withValues(alpha: 0.92)),
-                                ),
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  CustomPaint(size: const Size(160, 160), painter: _MoonCratersPainter()),
+                                  Icon(
+                                    Icons.power_settings_new_rounded,
+                                    size: 62,
+                                    color: isConnected
+                                        ? const Color(0xFF00E676)
+                                        : (isBusy ? const Color(0xFFFFE299) : Colors.white.withValues(alpha: 0.92)),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -295,4 +299,41 @@ class HomePage extends HookConsumerWidget {
       ),
     );
   }
+}
+class _MoonCratersPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    final marePaint = Paint()..color = const Color(0xFF07080C).withValues(alpha: 0.45);
+    canvas.drawCircle(Offset(w * 0.34, h * 0.36), w * 0.16, marePaint);
+    canvas.drawCircle(Offset(w * 0.62, h * 0.32), w * 0.13, marePaint);
+    canvas.drawCircle(Offset(w * 0.48, h * 0.68), w * 0.15, marePaint);
+
+    void drawCrater(double dx, double dy, double r) {
+      final center = Offset(w * dx, h * dy);
+      final shadow = Paint()..color = Colors.black.withValues(alpha: 0.52);
+      final rim = Paint()
+        ..color = const Color(0xFFD8E1F0).withValues(alpha: 0.14)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.1;
+      canvas.drawCircle(center, w * r, shadow);
+      canvas.drawCircle(center.translate(0.8, 0.8), w * r, rim);
+    }
+
+    drawCrater(0.28, 0.28, 0.055);
+    drawCrater(0.70, 0.26, 0.045);
+    drawCrater(0.23, 0.56, 0.065);
+    drawCrater(0.75, 0.58, 0.052);
+    drawCrater(0.36, 0.76, 0.048);
+    drawCrater(0.64, 0.74, 0.060);
+    drawCrater(0.50, 0.20, 0.038);
+    drawCrater(0.80, 0.42, 0.032);
+    drawCrater(0.20, 0.41, 0.030);
+    drawCrater(0.52, 0.83, 0.035);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
