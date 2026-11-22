@@ -38,31 +38,26 @@ jobs:
       - name: Sync Custom Icons & Branding
         run: |
           sed -i 's/app\.hiddify\.com/online.skydpi.xplatform/g' android/app/build.gradle* android/app/src/main/AndroidManifest.xml || true
-          sed -i 's/"Hiddify"/"X-Platform VPN"/g' lib/features/app/widget/app.dart android/app/src/main/kotlin/com/hiddify/hiddify/MainActivity.kt || true
-          sed -i "s/'Hiddify'/'X-Platform VPN'/g" lib/features/app/widget/app.dart || true
+          sed -i 's/"appTitle": "Hiddify"/"appTitle": "X-Platform VPN"/g' assets/translations/*.json || true
+          sed -i 's/>Hiddify</>X-Platform VPN</g' android/app/src/main/res/values*/strings.xml || true
           mkdir -p android/app/src/main/res/mipmap-anydpi-v26
           rm -f android/app/src/main/res/mipmap-anydpi-v26/ic_launcher*.xml
           NS_ANDROID=$(printf '%s:%s%s.%s/%s/%s/%s' 'http' '//' 'schemas' 'android.com' 'apk' 'res' 'android')
           printf '<?xml version="1.0" encoding="utf-8"?>\n<adaptive-icon xmlns:android="%s">\n    <background android:drawable="@android:color/white"/>\n    <foreground android:drawable="@mipmap/ic_launcher"/>\n</adaptive-icon>\n' "$NS_ANDROID" > android/app/src/main/res/mipmap-anydpi-v26/ic_banner.xml
-          for f in android/app/src/main/res/drawable*/ic_stat*.xml android/app/src/main/res/drawable*/ic_notification*.xml; do
-            [ -f "$f" ] && printf '<vector xmlns:android="%s" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="#FFFFFF" android:pathData="M5.5,4L12,10.5L18.5,4L20,5.5L13.5,12L20,18.5L18.5,20L12,13.5L5.5,20L4,18.5L10.5,12L4,5.5Z"/></vector>\n' "$NS_ANDROID" > "$f"
-          done
+          printf '<vector xmlns:android="%s" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="#FFFFFF" android:pathData="M5.5,4L12,10.5L18.5,4L20,5.5L13.5,12L20,18.5L18.5,20L12,13.5L5.5,20L4,18.5L10.5,12L4,5.5Z"/></vector>\n' "$NS_ANDROID" > android/app/src/main/res/drawable/ic_launcher_foreground.xml
           find android/app/src/main/res/mipmap-* -name "ic_launcher*.webp" -delete
           for dir in android/app/src/main/res/mipmap-mdpi android/app/src/main/res/mipmap-hdpi android/app/src/main/res/mipmap-xhdpi android/app/src/main/res/mipmap-xxhdpi android/app/src/main/res/mipmap-xxxhdpi; do
             cp assets/images/source/ic_launcher_foreground.png "$dir/ic_launcher.png"
             cp assets/images/source/ic_launcher_foreground.png "$dir/ic_launcher_round.png"
           done
-          cp assets/images/source/logo_transparent.png assets/images/tray_icon.png
-          cp assets/images/source/logo_transparent.png assets/images/source/ic_launcher_splash.png
-          find android/app/src/main/res -name "*splash*.png" -exec cp assets/images/source/logo_transparent.png {} \;
+          WELCOME_IMG="assets/images/source/welcome_logo.png"
+          [ ! -f "$WELCOME_IMG" ] && WELCOME_IMG="assets/images/source/logo_transparent.png"
+          cp "$WELCOME_IMG" assets/images/tray_icon.png
+          cp "$WELCOME_IMG" assets/images/source/ic_launcher_splash.png
+          find android/app/src/main/res -name "*splash*.png" -exec cp "$WELCOME_IMG" {} \;
           sed -i 's/#FBF8FF/#0E0D15/g' pubspec.yaml
           sed -i 's/#121318/#0E0D15/g' pubspec.yaml
           dart run flutter_native_splash:create
-          WELCOME_IMG="assets/images/source/welcome_logo.png"
-          [ ! -f "$WELCOME_IMG" ] && WELCOME_IMG="assets/images/source/logo_transparent.png"
-          B64=$(base64 -w 0 "$WELCOME_IMG")
-          NS_SVG=$(printf '%s:%s%s.%s/%s/%s' 'http' '//' 'www' 'w3.org' '2000' 'svg')
-          printf '<svg xmlns="%s" viewBox="0 0 120 120"><image href="data:image/png;base64,%s" x="4" y="4" width="112" height="112"/></svg>\n' "$NS_SVG" "$B64" > assets/images/logo.svg
 
       - name: Build Release APK
         run: |
