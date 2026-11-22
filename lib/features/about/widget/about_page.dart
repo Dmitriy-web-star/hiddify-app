@@ -13,7 +13,6 @@ import 'package:hiddify/core/router/dialog/dialog_notifier.dart';
 import 'package:hiddify/core/widget/adaptive_icon.dart';
 import 'package:hiddify/features/app_update/notifier/app_update_notifier.dart';
 import 'package:hiddify/features/app_update/notifier/app_update_state.dart';
-import 'package:hiddify/gen/assets.gen.dart';
 import 'package:hiddify/utils/utils.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -69,7 +68,6 @@ class AboutPage extends HookConsumerWidget {
           },
         ),
     ];
-
     return Scaffold(
       appBar: AppBar(
         title: Text(t.pages.about.title),
@@ -98,7 +96,10 @@ class AboutPage extends HookConsumerWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Assets.images.logo.svg(width: 64, height: 64),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Image.asset('assets/images/tray_icon.png', width: 64, height: 64, fit: BoxFit.contain),
+                  ),
                   const Gap(16),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,23 +123,6 @@ class AboutPage extends HookConsumerWidget {
                 trailing: const Icon(FluentIcons.chat_warning_24_regular),
                 onTap: () async {
                   await ref.read(dialogNotifierProvider.notifier).showReportProblem();
-                },
-              ),
-              ListTile(
-                title: Text(t.pages.about.sourceCode),
-                trailing: const Icon(FluentIcons.open_24_regular),
-                onTap: () async {
-                  await UriUtils.tryLaunch(Uri.parse(Constants.githubUrl));
-                },
-              ),
-              ListTile(
-                title: Text(t.pages.about.telegramChannel),
-                trailing: const Icon(FluentIcons.open_24_regular),
-                onTap: () async {
-                  await UriUtils.tryLaunchAppOrWeb(
-                    Uri.parse(Constants.telegramChannelAppUrl),
-                    Uri.parse(Constants.telegramChannelUrl),
-                  );
                 },
               ),
               ListTile(
