@@ -129,45 +129,44 @@ class HomePage extends HookConsumerWidget {
                         ref.read(connectionNotifierProvider.notifier).toggleConnection();
                       },
                       child: SizedBox(
-                        width: 220,
-                        height: 220,
+                        width: 224,
+                        height: 224,
                         child: Stack(
                           alignment: Alignment.center,
                           children: [
                             AnimatedContainer(
                               duration: const Duration(milliseconds: 500),
-                              width: isConnected ? 186 : 170,
-                              height: isConnected ? 186 : 170,
+                              width: isConnected ? 196 : 182,
+                              height: isConnected ? 196 : 182,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 gradient: RadialGradient(
                                   colors: isConnected
                                       ? [
-                                          const Color(0xFFFFF8E7),
-                                          const Color(0xFFFFD580).withValues(alpha: 0.75),
-                                          const Color(0xFF00E676).withValues(alpha: 0.25),
+                                          const Color(0xFFFFFBF0),
+                                          const Color(0xFFFFE299).withValues(alpha: 0.72),
+                                          const Color(0xFFFFC966).withValues(alpha: 0.22),
                                           Colors.transparent,
                                         ]
                                       : [
-                                          const Color(0xFFE6ECFF).withValues(alpha: 0.85),
-                                          const Color(0xFFB8C7E8).withValues(alpha: 0.35),
-                                          const Color(0xFF7B8BB2).withValues(alpha: 0.08),
+                                          const Color(0xFFE8EEFF).withValues(alpha: 0.75),
+                                          const Color(0xFFB4C2E0).withValues(alpha: 0.28),
+                                          const Color(0xFF7D8BA8).withValues(alpha: 0.06),
                                           Colors.transparent,
                                         ],
-                                  stops: const [0.78, 0.86, 0.94, 1.0],
+                                  stops: const [0.74, 0.82, 0.92, 1.0],
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: (isConnected ? const Color(0xFFFFE0A3) : const Color(0xFFD6E2FF))
-                                        .withValues(alpha: isConnected ? 0.42 : 0.18),
-                                    blurRadius: isConnected ? 45 : 30,
-                                    spreadRadius: isConnected ? 6 : 2,
+                                    color: (isConnected ? const Color(0xFFFFDF99) : const Color(0xFFC8D6F5))
+                                        .withValues(alpha: isConnected ? 0.45 : 0.18),
+                                    blurRadius: isConnected ? 48 : 32,
+                                    spreadRadius: isConnected ? 8 : 2,
                                   ),
                                   BoxShadow(
-                                    color: (isConnected ? const Color(0xFFFFF6D6) : const Color(0xFFFFFFFF))
-                                        .withValues(alpha: isConnected ? 0.55 : 0.28),
-                                    blurRadius: 18,
-                                    offset: const Offset(5, -5),
+                                    color: const Color(0xFFFFFFFF).withValues(alpha: isConnected ? 0.65 : 0.30),
+                                    blurRadius: 16,
+                                    offset: const Offset(6, -6),
                                   ),
                                 ],
                               ),
@@ -177,24 +176,33 @@ class HomePage extends HookConsumerWidget {
                                 width: 174,
                                 height: 174,
                                 child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFE0A3)),
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFE299)),
                                 ),
                               ),
                             Container(
-                              width: 156,
-                              height: 156,
+                              width: 160,
+                              height: 160,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 gradient: const RadialGradient(
-                                  colors: [Color(0xFF0A0A0F), Color(0xFF050508)],
-                                  stops: [0.7, 1.0],
+                                  center: Alignment(-0.25, -0.25),
+                                  radius: 0.95,
+                                  colors: [Color(0xFF1F2029), Color(0xFF111218), Color(0xFF060609)],
+                                  stops: [0.0, 0.58, 1.0],
                                 ),
                                 border: Border.all(
-                                  color: (isConnected ? const Color(0xFFFFF3D1) : const Color(0xFFE2E8F0))
+                                  color: (isConnected ? const Color(0xFFFFF4D6) : const Color(0xFFD8E1F0))
                                       .withValues(alpha: isConnected ? 0.85 : 0.45),
-                                  width: 1.5,
+                                  width: 1.2,
                                 ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.8),
+                                    blurRadius: 12,
+                                    spreadRadius: -2,
+                                  ),
+                                ],
                               ),
                               child: Center(
                                 child: Icon(
@@ -202,7 +210,7 @@ class HomePage extends HookConsumerWidget {
                                   size: 62,
                                   color: isConnected
                                       ? const Color(0xFF00E676)
-                                      : (isBusy ? const Color(0xFFFFE0A3) : Colors.white.withValues(alpha: 0.9)),
+                                      : (isBusy ? const Color(0xFFFFE299) : Colors.white.withValues(alpha: 0.92)),
                                 ),
                               ),
                             ),
