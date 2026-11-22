@@ -29,17 +29,14 @@ jobs:
           storeFile=xplatform-release.jks
           EOF
 
-      - name: Prepare Hiddify Core & Codegen
-        run: |
-          flutter pub get
-          dart run build_runner build --delete-conflicting-outputs
-          make android-libs
-
       - name: Sync Custom Icons & Branding
         run: |
           sed -i 's/app\.hiddify\.com/online.skydpi.xplatform/g' android/app/build.gradle* android/app/src/main/AndroidManifest.xml || true
-          sed -i 's/"appTitle": "Hiddify"/"appTitle": "X-Platform VPN"/g' assets/translations/*.json || true
+          sed -i 's/"Hiddify"/"X-Platform VPN"/g' lib/core/model/constants.dart lib/features/app/widget/app.dart || true
+          sed -i "s/'Hiddify'/'X-Platform VPN'/g" lib/core/model/constants.dart lib/features/app/widget/app.dart || true
+          find assets/translations -type f -exec sed -i 's/"Hiddify"/"X-Platform VPN"/g' {} + || true
           sed -i 's/>Hiddify</>X-Platform VPN</g' android/app/src/main/res/values*/strings.xml || true
+          sed -i 's/Assets\.images\.logo\.svg(/Image.asset("assets\/images\/tray_icon.png", /g' lib/features/about/widget/about_page.dart || true
           mkdir -p android/app/src/main/res/mipmap-anydpi-v26
           rm -f android/app/src/main/res/mipmap-anydpi-v26/ic_launcher*.xml
           NS_ANDROID=$(printf '%s:%s%s.%s/%s/%s/%s' 'http' '//' 'schemas' 'android.com' 'apk' 'res' 'android')
@@ -58,9 +55,15 @@ jobs:
           find android/app/src/main/res -name "*splash*.png" -exec cp "$WELCOME_IMG" {} \;
           sed -i 's/#FBF8FF/#0E0D15/g' pubspec.yaml
           sed -i 's/#121318/#0E0D15/g' pubspec.yaml
-          dart run flutter_native_splash:create
           NS_SVG=$(printf '%s:%s%s.%s/%s/%s' 'http' '//' 'www' 'w3.org' '2000' 'svg')
-          printf '<svg xmlns="%s" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#7B61FF"/></svg>\n' "$NS_SVG" > assets/images/logo.svg
+          printf '<svg xmlns="%s" viewBox="0 0 24 24"><path fill="#7B61FF" d="M5.5 4L12 10.5 18.5 4 20 5.5 13.5 12 20 18.5 18.5 20 12 13.5 5.5 20 4 18.5 10.5 12 4 5.5z"/></svg>\n' "$NS_SVG" > assets/images/logo.svg
+
+      - name: Prepare Hiddify Core & Codegen
+        run: |
+          flutter pub get
+          dart run build_runner build --delete-conflicting-outputs
+          dart run flutter_native_splash:create
+          make android-libs
 
       - name: Build Release APK
         run: |
