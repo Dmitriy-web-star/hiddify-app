@@ -1,7 +1,5 @@
-import 'package:flutter/material.dart';
 import 'dart:async';
-import 'package:hiddify/features/profile/model/profile_entity.dart';
-import 'package:hiddify/features/profile/notifier/profile_notifier.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:gap/gap.dart';
@@ -9,7 +7,9 @@ import 'package:hiddify/core/router/bottom_sheets/bottom_sheets_notifier.dart';
 import 'package:hiddify/core/router/dialog/dialog_notifier.dart';
 import 'package:hiddify/features/connection/model/connection_status.dart';
 import 'package:hiddify/features/connection/notifier/connection_notifier.dart';
+import 'package:hiddify/features/profile/model/profile_entity.dart';
 import 'package:hiddify/features/profile/notifier/active_profile_notifier.dart';
+import 'package:hiddify/features/profile/notifier/profile_notifier.dart';
 import 'package:hiddify/features/profile/widget/profile_tile.dart';
 import 'package:hiddify/features/proxy/active/active_proxy_card.dart';
 import 'package:hiddify/features/proxy/active/active_proxy_delay_indicator.dart';
@@ -26,7 +26,7 @@ class HomePage extends HookConsumerWidget {
     final connectionState = ref.watch(connectionNotifierProvider);
     final activeCard = ref.watch(activeProxyCardProvider);
     final pendingTap = useState(false);
-        // Автообновление подписки каждый час
+
     useEffect(() {
       final timer = Timer.periodic(const Duration(hours: 1), (_) {
         final profile = ref.read(activeProfileProvider).valueOrNull;
@@ -48,46 +48,30 @@ class HomePage extends HookConsumerWidget {
       return null;
     }, [status]);
 
-    final ringColor = isConnected
-        ? const Color(0xFF00E676)
-        : isBusy
-            ? const Color(0xFF7B61FF)
-            : const Color(0xFF3A3556);
-
-    final statusText = isConnected
-        ? 'Подключено'
-        : isBusy
-            ? 'Подключение...'
-            : 'Нажмите для подключения';
+    final statusText = isConnected ? 'Подключено' : (isBusy ? 'Подключение...' : 'Нажмите для подключения');
 
     return Scaffold(
       backgroundColor: const Color(0xFF0E0D15),
-                 appBar: AppBar(
+      appBar: AppBar(
         backgroundColor: const Color(0xFF0E0D15),
         title: Row(
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
+            Container(
+              width: 28,
+              height: 28,
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
               child: Image.asset(
                 'assets/images/tray_icon.png',
-                width: 28,
-                height: 28,
                 fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => const Icon(
-                  Icons.shield_rounded,
-                  color: Color(0xFF7B61FF),
-                  size: 24,
-                ),
+                errorBuilder: (_, __, ___) => const Icon(Icons.shield_rounded, color: Color(0xFF7B61FF), size: 20),
               ),
             ),
             const Gap(10),
-            const Text(
-              'X-Platform VPN',
-              style: TextStyle(fontWeight: FontWeight.w700, letterSpacing: 0.4),
-            ),
+            const Text('X-Platform VPN', style: TextStyle(fontWeight: FontWeight.w700, letterSpacing: 0.4)),
           ],
         ),
-           actions: [
+        actions: [
           IconButton(
             tooltip: 'Раздача прокси / VPN',
             icon: const Icon(Icons.wifi_tethering_rounded, color: Colors.white70),
@@ -144,34 +128,85 @@ class HomePage extends HookConsumerWidget {
                         pendingTap.value = true;
                         ref.read(connectionNotifierProvider.notifier).toggleConnection();
                       },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 250),
-                        width: 164,
-                        height: 164,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: const Color(0xFF181624),
-                          border: Border.all(color: ringColor, width: 3.5),
-                          boxShadow: [
-                            BoxShadow(
-                              color: ringColor.withValues(alpha: isConnected || isBusy ? 0.38 : 0.12),
-                              blurRadius: 32,
-                              spreadRadius: 4,
+                      child: SizedBox(
+                        width: 220,
+                        height: 220,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 500),
+                              width: isConnected ? 186 : 170,
+                              height: isConnected ? 186 : 170,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: RadialGradient(
+                                  colors: isConnected
+                                      ? [
+                                          const Color(0xFFFFF8E7),
+                                          const Color(0xFFFFD580).withValues(alpha: 0.75),
+                                          const Color(0xFF00E676).withValues(alpha: 0.25),
+                                          Colors.transparent,
+                                        ]
+                                      : [
+                                          const Color(0xFFE6ECFF).withValues(alpha: 0.85),
+                                          const Color(0xFFB8C7E8).withValues(alpha: 0.35),
+                                          const Color(0xFF7B8BB2).withValues(alpha: 0.08),
+                                          Colors.transparent,
+                                        ],
+                                  stops: const [0.78, 0.86, 0.94, 1.0],
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: (isConnected ? const Color(0xFFFFE0A3) : const Color(0xFFD6E2FF))
+                                        .withValues(alpha: isConnected ? 0.42 : 0.18),
+                                    blurRadius: isConnected ? 45 : 30,
+                                    spreadRadius: isConnected ? 6 : 2,
+                                  ),
+                                  BoxShadow(
+                                    color: (isConnected ? const Color(0xFFFFF6D6) : const Color(0xFFFFFFFF))
+                                        .withValues(alpha: isConnected ? 0.55 : 0.28),
+                                    blurRadius: 18,
+                                    offset: const Offset(5, -5),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (isBusy && !isConnected)
+                              const SizedBox(
+                                width: 174,
+                                height: 174,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFE0A3)),
+                                ),
+                              ),
+                            Container(
+                              width: 156,
+                              height: 156,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: const RadialGradient(
+                                  colors: [Color(0xFF0A0A0F), Color(0xFF050508)],
+                                  stops: [0.7, 1.0],
+                                ),
+                                border: Border.all(
+                                  color: (isConnected ? const Color(0xFFFFF3D1) : const Color(0xFFE2E8F0))
+                                      .withValues(alpha: isConnected ? 0.85 : 0.45),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Center(
+                                child: Icon(
+                                  Icons.power_settings_new_rounded,
+                                  size: 62,
+                                  color: isConnected
+                                      ? const Color(0xFF00E676)
+                                      : (isBusy ? const Color(0xFFFFE0A3) : Colors.white.withValues(alpha: 0.9)),
+                                ),
+                              ),
                             ),
                           ],
-                        ),
-                        child: Center(
-                          child: isBusy && !isConnected
-                              ? const SizedBox(
-                                  width: 48,
-                                  height: 48,
-                                  child: CircularProgressIndicator(color: Color(0xFF7B61FF), strokeWidth: 3.5),
-                                )
-                              : Icon(
-                                  Icons.power_settings_new_rounded,
-                                  size: 68,
-                                  color: isConnected ? const Color(0xFF00E676) : Colors.white,
-                                ),
                         ),
                       ),
                     ),
