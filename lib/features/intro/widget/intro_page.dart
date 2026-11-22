@@ -109,7 +109,12 @@ class IntroPage extends HookConsumerWidget with PresLogger {
                           ? IntroConst.maxwidth
                           : constraints.maxWidth;
                       final size = width * 0.4;
-                      return Assets.images.logo.svg(width: size, height: size);
+                                            return Image.asset(
+                        'assets/images/tray_icon.png',
+                        width: size,
+                        height: size,
+                        fit: BoxFit.contain,
+                      );
                     },
                   ),
                   const Gap(16),
