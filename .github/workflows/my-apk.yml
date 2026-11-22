@@ -29,16 +29,8 @@ jobs:
           storeFile=xplatform-release.jks
           EOF
 
-            - name: Sync Custom Icons & Branding
+      - name: Sync Custom Icons & Branding
         run: |
-          sed -i 's/app\.hiddify\.com/online.skydpi.xplatform/g' android/app/build.gradle* android/app/src/main/AndroidManifest.xml || true
-          sed -i 's/hiddify\/hiddify-next/X-PlatformVPN\/XPlatform-app/g' lib/core/model/constants.dart || true
-          sed -i 's/hiddify\/hiddify-app/X-PlatformVPN\/XPlatform-app/g' lib/core/model/constants.dart || true
-          sed -i 's/"Hiddify"/"X-Platform VPN"/g' lib/core/model/constants.dart lib/features/app/widget/app.dart || true
-          sed -i "s/'Hiddify'/'X-Platform VPN'/g" lib/core/model/constants.dart lib/features/app/widget/app.dart || true
-          sed -i '/telegramChannelUrl/d' lib/features/about/widget/about_page.dart || true
-          sed -i '/githubUrl/d' lib/features/about/widget/about_page.dart || true
-          sed -i 's/https:\/\/t\.me\/hiddify/https:\/\/cabinet.skydpi.online/g' lib/core/model/constants.dart || true
           sed -i 's/app\.hiddify\.com/online.skydpi.xplatform/g' android/app/build.gradle* android/app/src/main/AndroidManifest.xml || true
           sed -i 's/hiddify\/hiddify-next/X-PlatformVPN\/XPlatform-app/g' lib/core/model/constants.dart || true
           sed -i 's/hiddify\/hiddify-app/X-PlatformVPN\/XPlatform-app/g' lib/core/model/constants.dart || true
