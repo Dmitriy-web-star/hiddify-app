@@ -53,6 +53,7 @@ jobs:
           WELCOME_IMG="assets/images/source/welcome_logo.png"
           [ ! -f "$WELCOME_IMG" ] && WELCOME_IMG="assets/images/source/logo_transparent.png"
           cp "$WELCOME_IMG" assets/images/tray_icon.png
+          cp "$WELCOME_IMG" assets/images/source/ic_launcher_border.png
           cp "$WELCOME_IMG" assets/images/source/ic_launcher_splash.png
           find android/app/src/main/res -name "*splash*.png" -exec cp "$WELCOME_IMG" {} \;
           sed -i 's/#FBF8FF/#0E0D15/g' pubspec.yaml
