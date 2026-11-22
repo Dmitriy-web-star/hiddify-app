@@ -118,7 +118,7 @@ class HomePage extends HookConsumerWidget {
                     ),
                   ),
               },
-              Expanded(
+                           Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -186,36 +186,56 @@ class HomePage extends HookConsumerWidget {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 gradient: const RadialGradient(
-                                  center: Alignment(-0.25, -0.25),
-                                  radius: 0.95,
-                                  colors: [Color(0xFF1F2029), Color(0xFF111218), Color(0xFF060609)],
-                                  stops: [0.0, 0.58, 1.0],
+                                  center: Alignment(-0.32, -0.32),
+                                  radius: 0.92,
+                                  colors: [
+                                    Color(0xFFA6B0C3),
+                                    Color(0xFF6B7487),
+                                    Color(0xFF393F4D),
+                                    Color(0xFF1A1D26),
+                                  ],
+                                  stops: [0.0, 0.45, 0.80, 1.0],
                                 ),
                                 border: Border.all(
-                                  color: (isConnected ? const Color(0xFFFFF4D6) : const Color(0xFFD8E1F0))
-                                      .withValues(alpha: isConnected ? 0.85 : 0.45),
+                                  color: (isConnected ? const Color(0xFFFFF4D6) : const Color(0xFFE2E8F5))
+                                      .withValues(alpha: isConnected ? 0.9 : 0.55),
                                   width: 1.2,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.8),
-                                    blurRadius: 12,
+                                    color: Colors.black.withValues(alpha: 0.65),
+                                    blurRadius: 14,
                                     spreadRadius: -2,
                                   ),
                                 ],
                               ),
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  CustomPaint(size: const Size(160, 160), painter: _MoonCratersPainter()),
-                                  Icon(
-                                    Icons.power_settings_new_rounded,
-                                    size: 62,
-                                    color: isConnected
-                                        ? const Color(0xFF00E676)
-                                        : (isBusy ? const Color(0xFFFFE299) : Colors.white.withValues(alpha: 0.92)),
-                                  ),
-                                ],
+                              child: ClipOval(
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    CustomPaint(size: const Size(160, 160), painter: _MoonCratersPainter()),
+                                    Container(
+                                      width: 78,
+                                      height: 78,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        gradient: RadialGradient(
+                                          colors: [
+                                            const Color(0xFF13161F).withValues(alpha: 0.65),
+                                            Colors.transparent,
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.power_settings_new_rounded,
+                                      size: 60,
+                                      color: isConnected
+                                          ? const Color(0xFF00E676)
+                                          : (isBusy ? const Color(0xFFFFE299) : Colors.white),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ],
@@ -300,38 +320,43 @@ class HomePage extends HookConsumerWidget {
     );
   }
 }
+
 class _MoonCratersPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
 
-    final marePaint = Paint()..color = const Color(0xFF07080C).withValues(alpha: 0.45);
-    canvas.drawCircle(Offset(w * 0.34, h * 0.36), w * 0.16, marePaint);
-    canvas.drawCircle(Offset(w * 0.62, h * 0.32), w * 0.13, marePaint);
-    canvas.drawCircle(Offset(w * 0.48, h * 0.68), w * 0.15, marePaint);
+    final marePaint = Paint()
+      ..color = const Color(0xFF2B303D).withValues(alpha: 0.42)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7);
 
-    void drawCrater(double dx, double dy, double r) {
+    canvas.drawOval(Rect.fromCenter(center: Offset(w * 0.35, h * 0.34), width: w * 0.36, height: h * 0.28), marePaint);
+    canvas.drawOval(Rect.fromCenter(center: Offset(w * 0.64, h * 0.38), width: w * 0.28, height: h * 0.34), marePaint);
+    canvas.drawOval(Rect.fromCenter(center: Offset(w * 0.46, h * 0.70), width: w * 0.38, height: h * 0.24), marePaint);
+    canvas.drawCircle(Offset(w * 0.25, h * 0.56), w * 0.11, marePaint);
+
+    void drawSoftCrater(double dx, double dy, double r) {
       final center = Offset(w * dx, h * dy);
-      final shadow = Paint()..color = Colors.black.withValues(alpha: 0.52);
-      final rim = Paint()
-        ..color = const Color(0xFFD8E1F0).withValues(alpha: 0.14)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.1;
-      canvas.drawCircle(center, w * r, shadow);
-      canvas.drawCircle(center.translate(0.8, 0.8), w * r, rim);
+      final body = Paint()
+        ..color = const Color(0xFF252A36).withValues(alpha: 0.35)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.2);
+      final highlight = Paint()
+        ..color = const Color(0xFFD8E2F5).withValues(alpha: 0.22)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.8);
+      canvas.drawCircle(center.translate(1.2, 1.2), w * r, highlight);
+      canvas.drawCircle(center, w * r, body);
     }
 
-    drawCrater(0.28, 0.28, 0.055);
-    drawCrater(0.70, 0.26, 0.045);
-    drawCrater(0.23, 0.56, 0.065);
-    drawCrater(0.75, 0.58, 0.052);
-    drawCrater(0.36, 0.76, 0.048);
-    drawCrater(0.64, 0.74, 0.060);
-    drawCrater(0.50, 0.20, 0.038);
-    drawCrater(0.80, 0.42, 0.032);
-    drawCrater(0.20, 0.41, 0.030);
-    drawCrater(0.52, 0.83, 0.035);
+    drawSoftCrater(0.28, 0.26, 0.055);
+    drawSoftCrater(0.68, 0.24, 0.042);
+    drawSoftCrater(0.22, 0.55, 0.062);
+    drawSoftCrater(0.76, 0.56, 0.050);
+    drawSoftCrater(0.35, 0.75, 0.046);
+    drawSoftCrater(0.63, 0.73, 0.058);
+    drawSoftCrater(0.50, 0.18, 0.036);
+    drawSoftCrater(0.81, 0.40, 0.032);
+    drawSoftCrater(0.48, 0.84, 0.040);
   }
 
   @override
