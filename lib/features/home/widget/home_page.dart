@@ -118,7 +118,7 @@ class HomePage extends HookConsumerWidget {
                     ),
                   ),
               },
-                           Expanded(
+              Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -136,45 +136,32 @@ class HomePage extends HookConsumerWidget {
                           children: [
                             AnimatedContainer(
                               duration: const Duration(milliseconds: 500),
-                              width: isConnected ? 196 : 182,
-                              height: isConnected ? 196 : 182,
+                              width: 162,
+                              height: 162,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                gradient: RadialGradient(
-                                  colors: isConnected
-                                      ? [
-                                          const Color(0xFFFFFBF0),
-                                          const Color(0xFFFFE299).withValues(alpha: 0.72),
-                                          const Color(0xFFFFC966).withValues(alpha: 0.22),
-                                          Colors.transparent,
-                                        ]
-                                      : [
-                                          const Color(0xFFE8EEFF).withValues(alpha: 0.75),
-                                          const Color(0xFFB4C2E0).withValues(alpha: 0.28),
-                                          const Color(0xFF7D8BA8).withValues(alpha: 0.06),
-                                          Colors.transparent,
-                                        ],
-                                  stops: const [0.74, 0.82, 0.92, 1.0],
-                                ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: (isConnected ? const Color(0xFFFFDF99) : const Color(0xFFC8D6F5))
-                                        .withValues(alpha: isConnected ? 0.45 : 0.18),
-                                    blurRadius: isConnected ? 48 : 32,
-                                    spreadRadius: isConnected ? 8 : 2,
+                                    color: (isConnected
+                                            ? const Color(0xFFFFE6A8)
+                                            : const Color(0xFFCEDBFF))
+                                        .withValues(alpha: isConnected ? 0.34 : 0.16),
+                                    blurRadius: isConnected ? 56 : 38,
+                                    spreadRadius: isConnected ? 10 : 3,
                                   ),
                                   BoxShadow(
-                                    color: const Color(0xFFFFFFFF).withValues(alpha: isConnected ? 0.65 : 0.30),
-                                    blurRadius: 16,
-                                    offset: const Offset(6, -6),
+                                    color: const Color(0xFFFFFFFF)
+                                        .withValues(alpha: isConnected ? 0.48 : 0.22),
+                                    blurRadius: 20,
+                                    offset: const Offset(5, -5),
                                   ),
                                 ],
                               ),
                             ),
                             if (isBusy && !isConnected)
                               const SizedBox(
-                                width: 174,
-                                height: 174,
+                                width: 170,
+                                height: 170,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFE299)),
@@ -187,52 +174,34 @@ class HomePage extends HookConsumerWidget {
                                 shape: BoxShape.circle,
                                 gradient: const RadialGradient(
                                   center: Alignment(-0.32, -0.32),
-                                  radius: 0.92,
+                                  radius: 0.95,
                                   colors: [
-                                    Color(0xFFA6B0C3),
-                                    Color(0xFF6B7487),
-                                    Color(0xFF393F4D),
-                                    Color(0xFF1A1D26),
+                                    Color(0xFF282D3B),
+                                    Color(0xFF171A24),
+                                    Color(0xFF0C0E14),
+                                    Color(0xFF06070A),
                                   ],
                                   stops: [0.0, 0.45, 0.80, 1.0],
                                 ),
                                 border: Border.all(
-                                  color: (isConnected ? const Color(0xFFFFF4D6) : const Color(0xFFE2E8F5))
-                                      .withValues(alpha: isConnected ? 0.9 : 0.55),
-                                  width: 1.2,
+                                  color: (isConnected
+                                          ? const Color(0xFFFFF2CC)
+                                          : const Color(0xFFD6E0F5))
+                                      .withValues(alpha: isConnected ? 0.45 : 0.22),
+                                  width: 1.0,
                                 ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.65),
-                                    blurRadius: 14,
-                                    spreadRadius: -2,
-                                  ),
-                                ],
                               ),
                               child: ClipOval(
                                 child: Stack(
                                   alignment: Alignment.center,
                                   children: [
                                     CustomPaint(size: const Size(160, 160), painter: _MoonCratersPainter()),
-                                    Container(
-                                      width: 78,
-                                      height: 78,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        gradient: RadialGradient(
-                                          colors: [
-                                            const Color(0xFF13161F).withValues(alpha: 0.65),
-                                            Colors.transparent,
-                                          ],
-                                        ),
-                                      ),
-                                    ),
                                     Icon(
                                       Icons.power_settings_new_rounded,
                                       size: 60,
                                       color: isConnected
                                           ? const Color(0xFF00E676)
-                                          : (isBusy ? const Color(0xFFFFE299) : Colors.white),
+                                          : (isBusy ? const Color(0xFFFFE299) : Colors.white.withValues(alpha: 0.92)),
                                     ),
                                   ],
                                 ),
@@ -328,8 +297,8 @@ class _MoonCratersPainter extends CustomPainter {
     final h = size.height;
 
     final marePaint = Paint()
-      ..color = const Color(0xFF2B303D).withValues(alpha: 0.42)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7);
+      ..color = const Color(0xFF090B10).withValues(alpha: 0.55)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
 
     canvas.drawOval(Rect.fromCenter(center: Offset(w * 0.35, h * 0.34), width: w * 0.36, height: h * 0.28), marePaint);
     canvas.drawOval(Rect.fromCenter(center: Offset(w * 0.64, h * 0.38), width: w * 0.28, height: h * 0.34), marePaint);
@@ -339,11 +308,11 @@ class _MoonCratersPainter extends CustomPainter {
     void drawSoftCrater(double dx, double dy, double r) {
       final center = Offset(w * dx, h * dy);
       final body = Paint()
-        ..color = const Color(0xFF252A36).withValues(alpha: 0.35)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.2);
+        ..color = const Color(0xFF08090E).withValues(alpha: 0.48)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.5);
       final highlight = Paint()
-        ..color = const Color(0xFFD8E2F5).withValues(alpha: 0.22)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.8);
+        ..color = const Color(0xFFA8B6D1).withValues(alpha: 0.12)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.0);
       canvas.drawCircle(center.translate(1.2, 1.2), w * r, highlight);
       canvas.drawCircle(center, w * r, body);
     }
